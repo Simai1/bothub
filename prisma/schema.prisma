@@ -1,0 +1,44 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgcrypto]
+}
+
+model User {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name     String
+  email    String @unique
+  password String
+  books    Book[]
+  token    Token?
+  role     Role   @default(USER)
+}
+
+model Book {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title           String   @unique
+  author          String
+  publicationDate DateTime
+  genres          String[]
+  user            User?    @relation(fields: [userId], references: [id])
+  userId          String?  @db.Uuid
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Token {
+  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  refreshToken String
+  user         User?   @relation(fields: [userId], references: [id])
+  userId       String? @unique @db.Uuid
+}
+
+enum Role {
+  USER
+  ADMIN
+}
